@@ -11,31 +11,31 @@
 **Status**: [✓] Complete
 
 ### Setup
-- [ ] Create index.html with Tailwind CDN
-- [ ] Create sidebar (30%) + main area (70%) layout
-- [ ] Dark mode default styling
-- [ ] Create empty JS modules: app.js, decks.js, storage.js
+- [x] Create index.html with Tailwind CDN
+- [x] Create sidebar (30%) + main area (70%) layout
+- [x] Dark mode default styling
+- [x] Create empty JS modules: app.js, decks.js, storage.js
 
 ### Deck CRUD
-- [ ] `decks.js`: createDeck(name, description) → returns deck object
-- [ ] `decks.js`: updateDeck(id, updates) → preserves id/created
-- [ ] `decks.js`: deleteDeck(id) → removes deck + CASCADE delete cards
-- [ ] `decks.js`: getDeck(id) → finds by id
-- [ ] `decks.js`: validateDeckName(name, existingDecks) → no duplicates, `.trim()` 후 검증
+- [x] `decks.js`: createDeck(name, description) → returns deck object
+- [x] `decks.js`: updateDeck(id, updates) → preserves id/created
+- [x] `decks.js`: deleteDeck(id) → removes deck + CASCADE delete cards
+- [x] `decks.js`: getDeck(id) → finds by id
+- [x] `decks.js`: validateDeckName(name, existingDecks) → no duplicates, `.trim()` 후 검증
 
 ### Storage
-- [ ] `storage.js`: STORAGE_VERSION = "1.0" (마이그레이션 대비)
-- [ ] `storage.js`: saveDecks(decks) → LocalStorage
-- [ ] `storage.js`: loadDecks() → returns [] if empty, JSON 파싱 에러 핸들링
-- [ ] `storage.js`: isLocalStorageAvailable() → feature detection
-- [ ] `storage.js`: getStorageUsage() → quota 체크 (80% 경고, 95% 에러)
+- [x] `storage.js`: STORAGE_VERSION = "1.0" (마이그레이션 대비)
+- [x] `storage.js`: saveDecks(decks) → LocalStorage
+- [x] `storage.js`: loadDecks() → returns [] if empty, JSON 파싱 에러 핸들링
+- [x] `storage.js`: isLocalStorageAvailable() → feature detection
+- [x] `storage.js`: getStorageUsage() → quota 체크 (80% 경고, 95% 에러)
 
 ### UI Integration
-- [ ] Render deck list in sidebar
-- [ ] "New Deck" button → modal/form
-- [ ] Click deck → select and highlight
-- [ ] Edit deck name inline or modal
-- [ ] Delete deck → confirm dialog ("카드 X개도 함께 삭제됩니다")
+- [x] Render deck list in sidebar
+- [x] "New Deck" button → modal/form
+- [x] Click deck → select and highlight
+- [x] Edit deck name inline or modal
+- [x] Delete deck → confirm dialog ("카드 X개도 함께 삭제됩니다")
 
 ### Tests: DeckTests
 ```javascript
@@ -51,10 +51,10 @@ DeckTests = {
 }
 ```
 
-- [ ] Test: Run `DeckTests.runAll()` in console
-- [ ] Test: Create deck → refresh → deck persists
-- [ ] Test: Duplicate name shows error
-- [ ] Test: Delete deck → 연관 cards도 삭제됨
+- [x] Test: Run `DeckTests.runAll()` in console
+- [x] Test: Create deck → refresh → deck persists
+- [x] Test: Duplicate name shows error
+- [x] Test: Delete deck → 연관 cards도 삭제됨
 
 ---
 
