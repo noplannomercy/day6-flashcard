@@ -59,37 +59,37 @@ DeckTests = {
 ---
 
 ## Phase 2: Card Management (~15 min)
-**Status**: [ ] Not Started
+**Status**: [✓] Complete
 
 ### Card CRUD
-- [ ] `cards.js`: createCard(deckId, front, back) → card with level=1, nextReview=now
-- [ ] `cards.js`: updateCard(id, updates) → preserves id, created, level, dates
-- [ ] `cards.js`: deleteCard(id) → removes card
-- [ ] `cards.js`: deleteCardsByDeckId(deckId) → CASCADE 삭제용
-- [ ] `cards.js`: getCardsByDeck(deckId) → filtered list
-- [ ] `cards.js`: updateDeckCardCount(deckId) → sync count
-- [ ] `cards.js`: validateCard(front, back) → `.trim()` 후 빈 값 체크
+- [x] `cards.js`: createCard(deckId, front, back) → card with level=1, nextReview=now
+- [x] `cards.js`: updateCard(id, updates) → preserves id, created, level, dates
+- [x] `cards.js`: deleteCard(id) → removes card
+- [x] `cards.js`: deleteCardsByDeckId(deckId) → CASCADE 삭제용
+- [x] `cards.js`: getCardsByDeck(deckId) → filtered list
+- [x] `cards.js`: updateDeckCardCount(deckId) → sync count
+- [x] `cards.js`: validateCard(front, back) → `.trim()` 후 빈 값 체크
 
 ### Storage
-- [ ] `storage.js`: saveCards(cards) → LocalStorage
-- [ ] `storage.js`: loadCards() → returns [] if empty, JSON 에러 핸들링
+- [x] `storage.js`: saveCards(cards) → LocalStorage
+- [x] `storage.js`: loadCards() → returns [] if empty, JSON 에러 핸들링
 
 ### UI: Card List View
-- [ ] Main area shows cards for selected deck
-- [ ] Each card shows: front, back (truncated), level stars
-- [ ] Empty state: "No cards yet. Add your first card!"
-- [ ] 카드 0개 deck에서 Study 클릭 → "카드를 먼저 추가하세요" 안내
+- [x] Main area shows cards for selected deck
+- [x] Each card shows: front, back (truncated), level stars
+- [x] Empty state: "No cards yet. Add your first card!"
+- [x] 카드 0개 deck에서 Study 클릭 → "카드를 먼저 추가하세요" 안내
 
 ### UI: Add/Edit Card
-- [ ] "Add Card" button → form with front/back textareas
-- [ ] Validate: `.trim()` 후 front and back required
-- [ ] Edit card → pre-fill form, preserve progress (level, dates)
-- [ ] Delete card → confirm dialog
+- [x] "Add Card" button → form with front/back textareas
+- [x] Validate: `.trim()` 후 front and back required
+- [x] Edit card → pre-fill form, preserve progress (level, dates)
+- [x] Delete card → confirm dialog
 
 ### Search & Filter
-- [ ] Search input → filters by front+back text
-- [ ] **Debounce 300ms** 적용 (성능 최적화)
-- [ ] Filter dropdown: All, Level 1, Level 2, Level 3, Due Today
+- [x] Search input → filters by front+back text
+- [x] **Debounce 300ms** 적용 (성능 최적화)
+- [x] Filter dropdown: All, Level 1, Level 2, Level 3, Due Today
 
 ### Tests: CardTests
 ```javascript
@@ -107,11 +107,11 @@ CardTests = {
 }
 ```
 
-- [ ] Test: Run `CardTests.runAll()` in console
-- [ ] Test: Add card → deck cardCount increases
-- [ ] Test: Edit card → level/dates unchanged
-- [ ] Test: Delete card → deck cardCount decreases
-- [ ] Test: 공백만 입력 시 에러
+- [x] Test: Run `CardTests.runAll()` in console
+- [x] Test: Add card → deck cardCount increases
+- [x] Test: Edit card → level/dates unchanged
+- [x] Test: Delete card → deck cardCount decreases
+- [x] Test: 공백만 입력 시 에러
 
 ---
 
