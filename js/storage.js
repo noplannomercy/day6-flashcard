@@ -151,6 +151,140 @@ function saveSettings(settings) {
   return saveData(data);
 }
 
+// ========================
+// Export/Import (Phase 5)
+// ========================
+
+/**
+ * Export deck with all its cards as JSON
+ * @param {string} deckId - Deck ID to export
+ * @returns {Object} - Export object with deck and cards
+ */
+function exportDeck(deckId) {
+  const decks = loadDecks();
+  const cards = loadCards();
+
+  const deck = decks.find(d => d.id === deckId);
+  if (!deck) {
+    throw new Error("Deck not found");
+  }
+
+  const deckCards = cards.filter(c => c.deckId === deckId);
+
+  return {
+    version: STORAGE_VERSION,
+    exportDate: new Date().toISOString(),
+    deck: deck,
+    cards: deckCards
+  };
+}
+
+/**
+ * Import deck from JSON
+ * @param {Object} importData - Import object
+ * @returns {Object} - Result with success/error
+ */
+function importDeck(importData) {
+  try {
+    // Validate structure
+    if (!importData.deck || !Array.isArray(importData.cards)) {
+      return { success: false, error: "Invalid import format" };
+    }
+
+    const decks = loadDecks();
+    const cards = loadCards();
+
+    // Handle deck name conflicts
+    let deckName = importData.deck.name;
+    let counter = 2;
+    const existingNames = decks.map(d => d.name);
+
+    while (existingNames.includes(deckName)) {
+      deckName = `${importData.deck.name} (${counter})`;
+      counter++;
+    }
+
+    // Generate new IDs to avoid conflicts
+    const oldDeckId = importData.deck.id;
+    const newDeckId = crypto.randomUUID();
+
+    const newDeck = {
+      ...importData.deck,
+      id: newDeckId,
+      name: deckName,
+      created: new Date().toISOString(), // New creation date
+      cardCount: importData.cards.length
+    };
+
+    // Import cards with new IDs
+    const idMap = new Map(); // Map old card IDs to new ones
+    const newCards = importData.cards.map(card => {
+      const newCardId = crypto.randomUUID();
+      idMap.set(card.id, newCardId);
+
+      return {
+        ...card,
+        id: newCardId,
+        deckId: newDeckId,
+        created: new Date().toISOString()
+      };
+    });
+
+    // Save to storage
+    decks.push(newDeck);
+    saveDecks(decks);
+
+    cards.push(...newCards);
+    saveCards(cards);
+
+    return {
+      success: true,
+      deck: newDeck,
+      cardCount: newCards.length
+    };
+  } catch (e) {
+    console.error("Import failed:", e);
+    return { success: false, error: e.message };
+  }
+}
+
+/**
+ * Download JSON as file
+ * @param {Object} data - Data to export
+ * @param {string} filename - Filename
+ */
+function downloadJSON(data, filename) {
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+
+  URL.revokeObjectURL(url);
+}
+
+// ========================
+// Multi-tab Sync (Phase 5)
+// ========================
+
+/**
+ * Setup storage event listener for multi-tab sync
+ * @param {Function} callback - Called when storage changes in another tab
+ */
+function setupStorageSync(callback) {
+  window.addEventListener("storage", (e) => {
+    if (e.key === STORAGE_KEY && e.newValue !== null) {
+      console.log("Storage changed in another tab, reloading...");
+      callback();
+    }
+  });
+}
+
 // Export Tests
 const StorageTests = {
   runAll() {

@@ -16,12 +16,24 @@ function initializeApp() {
 
   // Event listeners
   document.getElementById("newDeckBtn").addEventListener("click", showNewDeckModal);
+  document.getElementById("importDeckBtn").addEventListener("click", handleImportClick);
 
   // Check if there are decks
   const decks = loadDecks();
   if (decks.length === 0) {
     showView("welcome");
   }
+
+  // Setup multi-tab sync
+  setupStorageSync(() => {
+    renderDeckList();
+    if (currentDeckId) {
+      renderDeckManagementView(currentDeckId);
+    }
+  });
+
+  // Setup global keyboard shortcuts
+  setupGlobalKeyboardShortcuts();
 }
 
 // Render deck list in sidebar
@@ -66,6 +78,11 @@ function selectDeck(deckId) {
   showDeckActions();
   showView("deckManagement");
   renderDeckManagementView(deckId);
+
+  // Show export button
+  const exportBtn = document.getElementById("exportDeckBtn");
+  exportBtn.classList.remove("hidden");
+  exportBtn.onclick = () => handleExportDeck(deckId);
 }
 
 // Show deck actions buttons
@@ -1031,5 +1048,321 @@ const StudyTests = {
     this.testKeyboardInInput();
     this.testEmptySession();
     console.log('=== All StudyTests Complete ===');
+  }
+};
+
+// ========================
+// Export/Import (Phase 5)
+// ========================
+
+/**
+ * Handle export deck
+ */
+function handleExportDeck(deckId) {
+  try {
+    const exportData = exportDeck(deckId);
+    const decks = loadDecks();
+    const deck = decks.find(d => d.id === deckId);
+    const filename = `${deck.name.replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().split('T')[0]}.json`;
+
+    downloadJSON(exportData, filename);
+
+    alert(`Deck exported successfully!\n\nFile: ${filename}`);
+  } catch (e) {
+    alert(`Export failed: ${e.message}`);
+  }
+}
+
+/**
+ * Handle import deck button click
+ */
+function handleImportClick() {
+  const fileInput = document.getElementById("importFileInput");
+  fileInput.value = ""; // Reset
+  fileInput.onchange = handleImportFile;
+  fileInput.click();
+}
+
+/**
+ * Handle import file selection
+ */
+function handleImportFile(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+
+  reader.onload = (event) => {
+    try {
+      const importData = JSON.parse(event.target.result);
+      const result = importDeck(importData);
+
+      if (result.success) {
+        alert(`Import successful!\n\nDeck: ${result.deck.name}\nCards: ${result.cardCount}`);
+        renderDeckList();
+        selectDeck(result.deck.id);
+      } else {
+        alert(`Import failed: ${result.error}`);
+      }
+    } catch (e) {
+      alert(`Import failed: Invalid JSON file\n\n${e.message}`);
+    }
+  };
+
+  reader.onerror = () => {
+    alert("Failed to read file");
+  };
+
+  reader.readAsText(file);
+}
+
+// ========================
+// Global Keyboard Shortcuts (Phase 5)
+// ========================
+
+/**
+ * Setup global keyboard shortcuts
+ */
+function setupGlobalKeyboardShortcuts() {
+  document.addEventListener("keydown", (e) => {
+    // Don't trigger in input fields
+    if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") {
+      return;
+    }
+
+    // Don't trigger in study mode (has its own shortcuts)
+    if (currentView === "study") {
+      return;
+    }
+
+    switch(e.key) {
+      case "n":
+      case "N":
+        // N: New deck
+        e.preventDefault();
+        showNewDeckModal();
+        break;
+
+      case "/":
+        // /: Focus search
+        e.preventDefault();
+        const searchInput = document.getElementById("cardSearch");
+        if (searchInput && !searchInput.classList.contains("hidden")) {
+          searchInput.focus();
+        }
+        break;
+
+      case "Escape":
+        // Esc: Close modal (already handled in modal code)
+        break;
+    }
+  });
+}
+
+// ========================
+// Export Tests (Phase 5)
+// ========================
+
+const ExportTests = {
+  /**
+   * Test: Export format is valid JSON
+   */
+  testExportFormat() {
+    // Create test deck
+    const testDeck = createDeck("Export Test", "Test export");
+    const decks = loadDecks();
+    decks.push(testDeck);
+    saveDecks(decks);
+
+    // Create test card
+    const testCard = createCard(testDeck.id, "Front", "Back");
+    const cards = loadCards();
+    cards.push(testCard);
+    saveCards(cards);
+
+    // Export
+    const exportData = exportDeck(testDeck.id);
+
+    console.assert(exportData.version === STORAGE_VERSION, '❌ Export should have version');
+    console.assert(exportData.deck !== undefined, '❌ Export should have deck');
+    console.assert(Array.isArray(exportData.cards), '❌ Export should have cards array');
+    console.assert(exportData.cards.length === 1, '❌ Export should have 1 card');
+    console.assert(exportData.exportDate !== undefined, '❌ Export should have exportDate');
+
+    console.log('✅ testExportFormat passed');
+  },
+
+  /**
+   * Test: Import creates deck + cards
+   */
+  testImportValid() {
+    // Create export data
+    const exportData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
+      deck: {
+        id: "test-import-deck",
+        name: "Import Test Deck",
+        description: "Test",
+        created: new Date().toISOString(),
+        cardCount: 1
+      },
+      cards: [
+        {
+          id: "test-import-card",
+          deckId: "test-import-deck",
+          front: "Imported Front",
+          back: "Imported Back",
+          level: 1,
+          correctCount: 0,
+          created: new Date().toISOString(),
+          nextReview: new Date().toISOString()
+        }
+      ]
+    };
+
+    const result = importDeck(exportData);
+
+    console.assert(result.success === true, '❌ Import should succeed');
+    console.assert(result.deck !== undefined, '❌ Import should return deck');
+    console.assert(result.cardCount === 1, '❌ Import should return cardCount');
+
+    // Verify deck was created
+    const decks = loadDecks();
+    const importedDeck = decks.find(d => d.name === "Import Test Deck");
+    console.assert(importedDeck !== undefined, '❌ Imported deck should exist');
+
+    console.log('✅ testImportValid passed');
+  },
+
+  /**
+   * Test: Import with invalid data shows error
+   */
+  testImportInvalid() {
+    const invalidData = {
+      // Missing deck and cards
+      version: "1.0"
+    };
+
+    const result = importDeck(invalidData);
+
+    console.assert(result.success === false, '❌ Import should fail for invalid data');
+    console.assert(result.error !== undefined, '❌ Import should return error message');
+
+    console.log('✅ testImportInvalid passed');
+  },
+
+  /**
+   * Test: Import doesn't overwrite existing (creates new IDs)
+   */
+  testImportMerge() {
+    const decksBefore = loadDecks().length;
+
+    const exportData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
+      deck: {
+        id: "merge-test-deck",
+        name: "Merge Test",
+        description: "",
+        created: new Date().toISOString(),
+        cardCount: 0
+      },
+      cards: []
+    };
+
+    const result = importDeck(exportData);
+
+    const decksAfter = loadDecks().length;
+    console.assert(decksAfter === decksBefore + 1, '❌ Import should add new deck, not replace');
+
+    console.log('✅ testImportMerge passed');
+  },
+
+  /**
+   * Test: Import with ID conflict generates new IDs
+   */
+  testImportIdConflict() {
+    // Create deck
+    const originalDeck = createDeck("ID Conflict Test", "");
+    const decks = loadDecks();
+    decks.push(originalDeck);
+    saveDecks(decks);
+
+    // Export data with same ID
+    const exportData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
+      deck: {
+        id: originalDeck.id, // Same ID!
+        name: "ID Conflict Test Copy",
+        description: "",
+        created: new Date().toISOString(),
+        cardCount: 0
+      },
+      cards: []
+    };
+
+    const result = importDeck(exportData);
+
+    console.assert(result.success === true, '❌ Import should succeed even with ID conflict');
+    console.assert(result.deck.id !== originalDeck.id, '❌ Import should generate new ID');
+
+    console.log('✅ testImportIdConflict passed');
+  },
+
+  /**
+   * Test: Import with duplicate name adds (2)
+   */
+  testImportDupeName() {
+    // Create deck
+    const originalDeck = createDeck("Dupe Name Test", "");
+    const decks = loadDecks();
+    decks.push(originalDeck);
+    saveDecks(decks);
+
+    // Export data with same name
+    const exportData = {
+      version: "1.0",
+      exportDate: new Date().toISOString(),
+      deck: {
+        id: crypto.randomUUID(),
+        name: "Dupe Name Test", // Same name!
+        description: "",
+        created: new Date().toISOString(),
+        cardCount: 0
+      },
+      cards: []
+    };
+
+    const result = importDeck(exportData);
+
+    console.assert(result.success === true, '❌ Import should succeed');
+    console.assert(result.deck.name === "Dupe Name Test (2)", `❌ Import should rename to "Dupe Name Test (2)", got "${result.deck.name}"`);
+
+    console.log('✅ testImportDupeName passed');
+  },
+
+  /**
+   * Test: Storage event listener (manual test)
+   */
+  testStorageEvent() {
+    console.log('✅ testStorageEvent passed (manual verification needed)');
+    console.log('  Manual test: Open app in 2 tabs, create deck in one, should auto-update in other');
+  },
+
+  /**
+   * Run all tests
+   */
+  runAll() {
+    console.log('=== Running ExportTests ===');
+    this.testExportFormat();
+    this.testImportValid();
+    this.testImportInvalid();
+    this.testImportMerge();
+    this.testImportIdConflict();
+    this.testImportDupeName();
+    this.testStorageEvent();
+    console.log('=== All ExportTests Complete ===');
   }
 };
