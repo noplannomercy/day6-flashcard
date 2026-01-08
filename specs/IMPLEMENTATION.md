@@ -8,7 +8,7 @@
 ---
 
 ## Phase 1: Deck Management (~12 min)
-**Status**: [ ] Not Started
+**Status**: [✓] Complete
 
 ### Setup
 - [ ] Create index.html with Tailwind CDN
