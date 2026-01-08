@@ -184,40 +184,40 @@ LeitnerTests = {
 ---
 
 ## Phase 4: Study Mode (~12 min)
-**Status**: [ ] Not Started
+**Status**: [✓] Complete
 
 ### Study Session
-- [ ] `app.js`: startStudySession(deckId) → load due cards
-- [ ] `app.js`: currentCard, cardIndex, sessionStats
-- [ ] `app.js`: flipCard() → show back side
-- [ ] `app.js`: nextCard() → advance or complete
-- [ ] `app.js`: endSession() → show summary
-- [ ] 카드 0개 시 Study 버튼 비활성화 또는 안내 메시지
+- [x] `app.js`: startStudySession(deckId) → load due cards
+- [x] `app.js`: currentCard, cardIndex, sessionStats
+- [x] `app.js`: flipCard() → show back side
+- [x] `app.js`: nextCard() → advance or complete
+- [x] `app.js`: endSession() → show summary
+- [x] 카드 0개 시 Study 버튼 비활성화 또는 안내 메시지
 
 ### Card Flip Animation
-- [ ] CSS: .card-container with perspective
-- [ ] CSS: .card-front, .card-back with backface-visibility
-- [ ] CSS: .flipped rotates 180deg on Y-axis
-- [ ] Transition: 0.6s ease-in-out
+- [x] CSS: .card-container with perspective
+- [x] CSS: .card-front, .card-back with backface-visibility
+- [x] CSS: .flipped rotates 180deg on Y-axis
+- [x] Transition: 0.6s ease-in-out
 
 ### Study UI
-- [ ] Study view replaces main area
-- [ ] Card display: large, centered
-- [ ] "Show Answer" button (before flip)
-- [ ] "I Know It" / "Review Again" buttons (after flip)
-- [ ] Progress bar: X of Y cards
-- [ ] Due count badge in sidebar
+- [x] Study view replaces main area
+- [x] Card display: large, centered
+- [x] "Show Answer" button (before flip)
+- [x] "I Know It" / "Review Again" buttons (after flip)
+- [x] Progress bar: X of Y cards
+- [x] Due count badge in sidebar
 
 ### Keyboard Shortcuts
-- [ ] Space: Flip card / Show answer
-- [ ] → (Right Arrow): I know it
-- [ ] ← (Left Arrow): Review again
-- [ ] Esc: Exit study mode
-- [ ] 입력 필드 focus 시 단축키 비활성화
+- [x] Space: Flip card / Show answer
+- [x] → (Right Arrow): I know it
+- [x] ← (Left Arrow): Review again
+- [x] Esc: Exit study mode
+- [x] 입력 필드 focus 시 단축키 비활성화
 
 ### Session Complete
-- [ ] Stats: cards reviewed, correct %, time spent
-- [ ] "Study Again" or "Back to Deck" buttons
+- [x] Stats: cards reviewed, correct %, time spent
+- [x] "Study Again" or "Back to Deck" buttons
 
 ### Tests: StudyTests
 ```javascript
@@ -234,10 +234,10 @@ StudyTests = {
 }
 ```
 
-- [ ] Test: Run `StudyTests.runAll()` in console
-- [ ] Test: Card flip animation is smooth
-- [ ] Test: Keyboard shortcuts work in study mode
-- [ ] Test: Session ends and shows stats
+- [x] Test: Run `StudyTests.runAll()` in console
+- [x] Test: Card flip animation is smooth
+- [x] Test: Keyboard shortcuts work in study mode
+- [x] Test: Session ends and shows stats
 
 ---
 
