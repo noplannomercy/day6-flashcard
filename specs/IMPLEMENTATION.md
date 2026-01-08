@@ -116,7 +116,7 @@ CardTests = {
 ---
 
 ## Phase 3: Learning System (~15 min)
-**Status**: [ ] Not Started
+**Status**: [✓] Complete
 
 ### Leitner Algorithm (PRD 기준 정확한 로직)
 ```
@@ -125,13 +125,13 @@ Level 2 (Review):   Review in 3 days    → +3 days
 Level 3 (Mastered): Review in 7 days    → +7 days
 ```
 
-- [ ] `learning.js`: markCorrect(card) → level up + nextReview
+- [x] `learning.js`: markCorrect(card) → level up + nextReview
   - Level 1 → 2: nextReview = **+3 days** (다음 레벨 기준)
   - Level 2 → 3: nextReview = **+7 days** (다음 레벨 기준)
   - Level 3 → 3: nextReview = **+7 days** (유지)
-- [ ] `learning.js`: markIncorrect(card) → reset to level 1, nextReview = **+1 day**
-- [ ] `learning.js`: calculateNextReview(level) → Date object
-- [ ] `learning.js`: isCardDue(card) → nextReview <= now
+- [x] `learning.js`: markIncorrect(card) → reset to level 1, nextReview = **+1 day**
+- [x] `learning.js`: calculateNextReview(level) → Date object
+- [x] `learning.js`: isCardDue(card) → nextReview <= now
 
 ### Date Utilities (타임존 안전)
 ```javascript
@@ -150,13 +150,13 @@ function addDays(date, days) {
 }
 ```
 
-- [ ] `learning.js`: normalizeDate(date) → 자정 기준 정규화
-- [ ] `learning.js`: addDays(date, days) → 타임존 안전한 날짜 계산
+- [x] `learning.js`: normalizeDate(date) → 자정 기준 정규화
+- [x] `learning.js`: addDays(date, days) → 타임존 안전한 날짜 계산
 
 ### Due Cards
-- [ ] `learning.js`: getDueCards(deckId, cards) → filtered + sorted by level
-- [ ] `learning.js`: getDueCount(deckId, cards) → number for sidebar
-- [ ] Due 비교 시 날짜만 비교 (시간 무시)
+- [x] `learning.js`: getDueCards(deckId, cards) → filtered + sorted by level
+- [x] `learning.js`: getDueCount(deckId, cards) → number for sidebar
+- [x] Due 비교 시 날짜만 비교 (시간 무시)
 
 ### Tests: LeitnerTests (CRITICAL)
 ```javascript
@@ -176,10 +176,10 @@ LeitnerTests = {
 }
 ```
 
-- [ ] Test: Run `LeitnerTests.runAll()` in console
-- [ ] Test: Verify date math (+1d, +3d, +7d) is correct
-- [ ] Test: Level never goes above 3 or below 1
-- [ ] Test: 타임존 변경해도 날짜 계산 정확
+- [x] Test: Run `LeitnerTests.runAll()` in console
+- [x] Test: Verify date math (+1d, +3d, +7d) is correct
+- [x] Test: Level never goes above 3 or below 1
+- [x] Test: 타임존 변경해도 날짜 계산 정확
 
 ---
 
