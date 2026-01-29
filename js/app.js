@@ -13,10 +13,18 @@ document.addEventListener("DOMContentLoaded", () => {
 function initializeApp() {
   // Load and render decks
   renderDeckList();
+  updateHeaderDeckSelector();
 
   // Event listeners
   document.getElementById("newDeckBtn").addEventListener("click", showNewDeckModal);
   document.getElementById("importDeckBtn").addEventListener("click", handleImportClick);
+
+  // Header deck selector change
+  document.getElementById("headerDeckSelect").addEventListener("change", (e) => {
+    if (e.target.value) {
+      selectDeck(e.target.value);
+    }
+  });
 
   // Check if there are decks
   const decks = loadDecks();
@@ -27,13 +35,53 @@ function initializeApp() {
   // Setup multi-tab sync
   setupStorageSync(() => {
     renderDeckList();
+    updateHeaderDeckSelector();
     if (currentDeckId) {
       renderDeckManagementView(currentDeckId);
+      updateHeaderCardCount(currentDeckId);
     }
   });
 
   // Setup global keyboard shortcuts
   setupGlobalKeyboardShortcuts();
+}
+
+// Update header deck selector dropdown
+function updateHeaderDeckSelector() {
+  const decks = loadDecks();
+  const headerSelect = document.getElementById("headerDeckSelect");
+
+  headerSelect.innerHTML = decks.map(deck =>
+    `<option value="${deck.id}" ${deck.id === currentDeckId ? 'selected' : ''}>${escapeHtml(deck.name)}</option>`
+  ).join("");
+}
+
+// Update header card count badge
+function updateHeaderCardCount(deckId) {
+  const decks = loadDecks();
+  const deck = getDeck(deckId, decks);
+  const cards = loadCards();
+  const deckCards = cards.filter(c => c.deckId === deckId);
+
+  document.getElementById("headerCardCountText").textContent = `${deckCards.length} cards`;
+}
+
+// Show/hide header controls
+function showHeaderControls(show) {
+  const headerControls = document.getElementById("headerControls");
+  const headerCardCount = document.getElementById("headerCardCount");
+
+  if (show) {
+    headerControls.classList.remove("hidden");
+    headerControls.classList.add("flex");
+    headerCardCount.classList.remove("hidden");
+    headerCardCount.classList.add("lg:flex");
+  } else {
+    headerControls.classList.add("hidden");
+    headerControls.classList.remove("flex");
+    headerCardCount.classList.add("hidden");
+    headerCardCount.classList.remove("lg:flex");
+  }
 }
 
 // Render deck list in sidebar
@@ -43,7 +91,8 @@ function renderDeckList() {
 
   if (decks.length === 0) {
     deckListEl.innerHTML = `
-      <div class="text-center text-gray-400 py-8">
+      <div class="text-center text-text-subtle py-8">
+        <span class="material-symbols-outlined text-4xl text-text-subtle mb-2 block">folder_off</span>
         <p>No decks yet</p>
       </div>
     `;
@@ -54,15 +103,29 @@ function renderDeckList() {
 
   deckListEl.innerHTML = decks.map(deck => {
     const dueCount = getDueCount(deck.id, allCards);
+    const isSelected = deck.id === currentDeckId;
     return `
     <div
-      class="deck-item p-4 bg-gray-700 hover:bg-gray-600 rounded-lg cursor-pointer transition ${deck.id === currentDeckId ? 'ring-2 ring-blue-500' : ''}"
+      class="deck-item p-4 ${isSelected ? 'bg-surface ring-2 ring-primary' : 'bg-card-dark hover:bg-card-hover'} rounded-xl cursor-pointer transition-all group"
       data-deck-id="${deck.id}"
       onclick="selectDeck('${deck.id}')"
     >
-      <div class="font-semibold">📚 ${escapeHtml(deck.name)}</div>
-      <div class="text-sm text-gray-400 mt-1">
-        ${deck.cardCount} cards${dueCount > 0 ? ` · <span class="text-yellow-400">${dueCount} due</span>` : ''}
+      <div class="flex items-center gap-3">
+        <div class="flex items-center justify-center size-10 rounded-lg ${isSelected ? 'bg-primary/20' : 'bg-surface'} transition-colors">
+          <span class="material-symbols-outlined ${isSelected ? 'text-primary' : 'text-text-muted'} text-[20px]">style</span>
+        </div>
+        <div class="flex-1 min-w-0">
+          <div class="font-semibold text-white truncate">${escapeHtml(deck.name)}</div>
+          <div class="text-sm text-text-subtle flex items-center gap-2 mt-0.5">
+            <span>${deck.cardCount} cards</span>
+            ${dueCount > 0 ? `
+              <span class="inline-flex items-center gap-1 text-primary">
+                <span class="material-symbols-outlined text-[14px]">schedule</span>
+                <span class="font-medium">${dueCount} due</span>
+              </span>
+            ` : ''}
+          </div>
+        </div>
       </div>
     </div>
     `;
@@ -79,9 +142,15 @@ function selectDeck(deckId) {
   showView("deckManagement");
   renderDeckManagementView(deckId);
 
-  // Show export button
+  // Show header controls and update
+  showHeaderControls(true);
+  updateHeaderDeckSelector();
+  updateHeaderCardCount(deckId);
+
+  // Show export button (use flex to show, hidden to hide)
   const exportBtn = document.getElementById("exportDeckBtn");
   exportBtn.classList.remove("hidden");
+  exportBtn.classList.add("flex");
   exportBtn.onclick = () => handleExportDeck(deckId);
 }
 
@@ -93,32 +162,39 @@ function showDeckActions() {
 // Show new deck modal
 function showNewDeckModal() {
   const modalContent = `
-    <h3 class="text-xl font-bold mb-4">Create New Deck</h3>
+    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">create_new_folder</span>
+      Create New Deck
+    </h3>
     <form id="newDeckForm" class="space-y-4">
       <div>
-        <label for="deckNameInput" class="block text-sm font-medium mb-2">Deck Name:</label>
+        <label for="deckNameInput" class="block text-sm font-medium mb-2 text-text-muted">Deck Name</label>
         <input
           type="text"
           id="deckNameInput"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all"
+          placeholder="Enter deck name..."
           required
           autocomplete="off"
         />
-        <div id="deckNameError" class="text-red-500 text-sm mt-1 hidden"></div>
+        <div id="deckNameError" class="text-coral text-sm mt-2 hidden"></div>
       </div>
       <div>
-        <label for="deckDescInput" class="block text-sm font-medium mb-2">Description (optional):</label>
+        <label for="deckDescInput" class="block text-sm font-medium mb-2 text-text-muted">Description (optional)</label>
         <textarea
           id="deckDescInput"
           rows="2"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all resize-none"
+          placeholder="Enter description..."
         ></textarea>
       </div>
-      <div class="flex gap-2">
-        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 h-12 bg-primary hover:bg-primary-hover text-background-dark font-bold rounded-xl transition-all btn-primary-glow flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">add</span>
           Create
         </button>
-        <button type="button" onclick="closeModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+        <button type="button" onclick="closeModal()" class="flex-1 h-12 bg-surface hover:bg-surface-hover text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">close</span>
           Cancel
         </button>
       </div>
@@ -175,42 +251,48 @@ function showEditDeckModal(deckId) {
   if (!deck) return;
 
   const modalContent = `
-    <h3 class="text-xl font-bold mb-4">Edit Deck</h3>
+    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">edit</span>
+      Edit Deck
+    </h3>
     <form id="editDeckForm" class="space-y-4">
       <div>
-        <label for="editDeckNameInput" class="block text-sm font-medium mb-2">Deck Name:</label>
+        <label for="editDeckNameInput" class="block text-sm font-medium mb-2 text-text-muted">Deck Name</label>
         <input
           type="text"
           id="editDeckNameInput"
           value="${escapeHtml(deck.name)}"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all"
           required
           autocomplete="off"
         />
-        <div id="editDeckNameError" class="text-red-500 text-sm mt-1 hidden"></div>
+        <div id="editDeckNameError" class="text-coral text-sm mt-2 hidden"></div>
       </div>
       <div>
-        <label for="editDeckDescInput" class="block text-sm font-medium mb-2">Description:</label>
+        <label for="editDeckDescInput" class="block text-sm font-medium mb-2 text-text-muted">Description</label>
         <textarea
           id="editDeckDescInput"
           rows="2"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all resize-none"
         >${escapeHtml(deck.description)}</textarea>
       </div>
-      <div class="flex gap-2">
-        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 h-12 bg-primary hover:bg-primary-hover text-background-dark font-bold rounded-xl transition-all btn-primary-glow flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">save</span>
           Save
         </button>
-        <button type="button" onclick="closeModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+        <button type="button" onclick="closeModal()" class="flex-1 h-12 bg-surface hover:bg-surface-hover text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">close</span>
           Cancel
         </button>
       </div>
-      <hr class="border-gray-600">
+      <hr class="border-border-dark my-4">
       <button
         type="button"
         onclick="handleDeleteDeck('${deckId}')"
-        class="w-full bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition min-h-[44px]"
+        class="w-full h-12 bg-coral/10 border border-coral/20 text-coral font-bold rounded-xl hover:bg-coral hover:text-white transition-all flex items-center justify-center gap-2 min-h-[44px]"
       >
+        <span class="material-symbols-outlined">delete</span>
         Delete Deck
       </button>
     </form>
@@ -274,8 +356,17 @@ function handleDeleteDeck(deckId) {
   closeModal();
   currentDeckId = null;
   renderDeckList();
+  updateHeaderDeckSelector();
   showView("welcome");
   document.getElementById("deckActions").classList.add("hidden");
+
+  // Hide header controls
+  showHeaderControls(false);
+
+  // Hide export button
+  const exportBtn = document.getElementById("exportDeckBtn");
+  exportBtn.classList.add("hidden");
+  exportBtn.classList.remove("flex");
 }
 
 // Render deck management view
@@ -325,7 +416,8 @@ function renderCardList(deckId, searchQuery = "", filterLevel = "all") {
       : "No cards yet. Add your first card!";
 
     cardListEl.innerHTML = `
-      <div class="text-center text-gray-400 py-8">
+      <div class="text-center text-text-subtle py-12">
+        <span class="material-symbols-outlined text-4xl text-text-subtle mb-3 block">note_stack</span>
         <p>${message}</p>
       </div>
     `;
@@ -333,27 +425,33 @@ function renderCardList(deckId, searchQuery = "", filterLevel = "all") {
   }
 
   cardListEl.innerHTML = cards.map(card => `
-    <div class="bg-gray-800 p-4 rounded-lg">
-      <div class="flex justify-between items-start mb-2">
-        <div class="flex-1">
-          <div class="font-semibold mb-1">Front: ${escapeHtml(card.front)}</div>
-          <div class="text-gray-400 text-sm">Back: ${escapeHtml(card.back)}</div>
-        </div>
-        <div class="text-sm text-gray-400 ml-4">
-          ${getLevelDisplay(card.level)}
+    <div class="bg-card-dark hover:bg-card-hover p-5 rounded-xl transition-colors group">
+      <div class="flex justify-between items-start gap-4">
+        <div class="flex-1 min-w-0">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="text-xs font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full uppercase tracking-wider">Front</span>
+            ${getLevelBadge(card.level)}
+          </div>
+          <div class="font-semibold text-white mb-3 break-words">${escapeHtml(card.front)}</div>
+          <div class="flex items-center gap-2 mb-1">
+            <span class="text-xs font-bold text-text-muted bg-surface px-2 py-0.5 rounded-full uppercase tracking-wider">Back</span>
+          </div>
+          <div class="text-text-muted text-sm break-words">${escapeHtml(card.back)}</div>
         </div>
       </div>
-      <div class="flex gap-2 mt-3">
+      <div class="flex gap-2 mt-4 pt-4 border-t border-border-dark">
         <button
           onclick="showEditCardModal('${card.id}')"
-          class="text-sm bg-gray-700 hover:bg-gray-600 text-white px-3 py-1 rounded transition"
+          class="flex-1 h-10 bg-surface hover:bg-surface-hover text-white text-sm font-medium rounded-lg transition-colors flex items-center justify-center gap-1.5"
         >
+          <span class="material-symbols-outlined text-[18px]">edit</span>
           Edit
         </button>
         <button
           onclick="handleDeleteCard('${card.id}')"
-          class="text-sm bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded transition"
+          class="h-10 px-4 bg-coral/10 border border-coral/20 text-coral text-sm font-medium rounded-lg hover:bg-coral hover:text-white transition-all flex items-center justify-center gap-1.5"
         >
+          <span class="material-symbols-outlined text-[18px]">delete</span>
           Delete
         </button>
       </div>
@@ -398,33 +496,40 @@ function setupSearchAndFilter(deckId) {
 // Show add card modal
 function showAddCardModal(deckId) {
   const modalContent = `
-    <h3 class="text-xl font-bold mb-4">Add New Card</h3>
+    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">add_card</span>
+      Add New Card
+    </h3>
     <form id="addCardForm" class="space-y-4">
       <div>
-        <label for="cardFrontInput" class="block text-sm font-medium mb-2">Front (Question/Term):</label>
+        <label for="cardFrontInput" class="block text-sm font-medium mb-2 text-text-muted">Front (Question/Term)</label>
         <textarea
           id="cardFrontInput"
           rows="3"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all resize-none"
+          placeholder="Enter question or term..."
           required
         ></textarea>
-        <div id="cardFrontError" class="text-red-500 text-sm mt-1 hidden"></div>
+        <div id="cardFrontError" class="text-coral text-sm mt-2 hidden"></div>
       </div>
       <div>
-        <label for="cardBackInput" class="block text-sm font-medium mb-2">Back (Answer/Definition):</label>
+        <label for="cardBackInput" class="block text-sm font-medium mb-2 text-text-muted">Back (Answer/Definition)</label>
         <textarea
           id="cardBackInput"
           rows="3"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all resize-none"
+          placeholder="Enter answer or definition..."
           required
         ></textarea>
-        <div id="cardBackError" class="text-red-500 text-sm mt-1 hidden"></div>
+        <div id="cardBackError" class="text-coral text-sm mt-2 hidden"></div>
       </div>
-      <div class="flex gap-2">
-        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 h-12 bg-primary hover:bg-primary-hover text-background-dark font-bold rounded-xl transition-all btn-primary-glow flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">add</span>
           Add Card
         </button>
-        <button type="button" onclick="closeModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+        <button type="button" onclick="closeModal()" class="flex-1 h-12 bg-surface hover:bg-surface-hover text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">close</span>
           Cancel
         </button>
       </div>
@@ -483,6 +588,7 @@ function handleAddCard(deckId) {
   closeModal();
   renderCardList(deckId, currentSearchQuery, currentFilterLevel);
   renderDeckList();
+  updateHeaderCardCount(deckId);
 }
 
 // Show edit card modal
@@ -493,37 +599,48 @@ function showEditCardModal(cardId) {
   if (!card) return;
 
   const modalContent = `
-    <h3 class="text-xl font-bold mb-4">Edit Card</h3>
+    <h3 class="text-xl font-bold mb-6 flex items-center gap-2">
+      <span class="material-symbols-outlined text-primary">edit_note</span>
+      Edit Card
+    </h3>
     <form id="editCardForm" class="space-y-4">
       <div>
-        <label for="editCardFrontInput" class="block text-sm font-medium mb-2">Front (Question/Term):</label>
+        <label for="editCardFrontInput" class="block text-sm font-medium mb-2 text-text-muted">Front (Question/Term)</label>
         <textarea
           id="editCardFrontInput"
           rows="3"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all resize-none"
           required
         >${escapeHtml(card.front)}</textarea>
-        <div id="editCardFrontError" class="text-red-500 text-sm mt-1 hidden"></div>
+        <div id="editCardFrontError" class="text-coral text-sm mt-2 hidden"></div>
       </div>
       <div>
-        <label for="editCardBackInput" class="block text-sm font-medium mb-2">Back (Answer/Definition):</label>
+        <label for="editCardBackInput" class="block text-sm font-medium mb-2 text-text-muted">Back (Answer/Definition)</label>
         <textarea
           id="editCardBackInput"
           rows="3"
-          class="w-full bg-gray-700 border border-gray-600 rounded-lg px-4 py-2 focus:outline-none focus:border-blue-500"
+          class="w-full bg-background-dark rounded-lg border-0 px-4 py-3 text-white placeholder:text-text-subtle ring-1 ring-inset ring-border-dark hover:ring-border-hover focus:ring-2 focus:ring-primary transition-all resize-none"
           required
         >${escapeHtml(card.back)}</textarea>
-        <div id="editCardBackError" class="text-red-500 text-sm mt-1 hidden"></div>
+        <div id="editCardBackError" class="text-coral text-sm mt-2 hidden"></div>
       </div>
-      <div class="text-sm text-gray-400">
-        Level: ${getLevelDisplay(card.level)}<br>
-        Created: ${new Date(card.created).toLocaleDateString()}
+      <div class="flex items-center gap-4 p-3 bg-surface rounded-lg text-sm">
+        <div class="flex items-center gap-2 text-text-muted">
+          <span class="material-symbols-outlined text-[18px]">trending_up</span>
+          ${getLevelBadge(card.level)}
+        </div>
+        <div class="flex items-center gap-2 text-text-subtle">
+          <span class="material-symbols-outlined text-[18px]">calendar_today</span>
+          ${new Date(card.created).toLocaleDateString()}
+        </div>
       </div>
-      <div class="flex gap-2">
-        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+      <div class="flex gap-3 pt-2">
+        <button type="submit" class="flex-1 h-12 bg-primary hover:bg-primary-hover text-background-dark font-bold rounded-xl transition-all btn-primary-glow flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">save</span>
           Save
         </button>
-        <button type="button" onclick="closeModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg transition min-h-[44px]">
+        <button type="button" onclick="closeModal()" class="flex-1 h-12 bg-surface hover:bg-surface-hover text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2 min-h-[44px]">
+          <span class="material-symbols-outlined">close</span>
           Cancel
         </button>
       </div>
@@ -595,6 +712,7 @@ function handleDeleteCard(cardId) {
   // Update UI
   renderCardList(currentDeckId, currentSearchQuery, currentFilterLevel);
   renderDeckList();
+  updateHeaderCardCount(card.deckId);
 }
 
 // Show/hide views
@@ -657,6 +775,17 @@ function getLevelDisplay(level) {
   return `Level ${level} ${stars}`;
 }
 
+// Utility: Get level badge HTML
+function getLevelBadge(level) {
+  const colors = {
+    1: 'bg-coral/10 text-coral',
+    2: 'bg-yellow-500/10 text-yellow-400',
+    3: 'bg-primary/10 text-primary'
+  };
+  const colorClass = colors[level] || colors[1];
+  return `<span class="text-xs font-bold ${colorClass} px-2 py-0.5 rounded-full">Lv.${level}</span>`;
+}
+
 // Utility: Debounce function
 function debounce(func, delay) {
   let timeoutId;
@@ -691,13 +820,18 @@ function startStudySession(deckId) {
 
   // Check if there are cards to study
   if (dueCards.length === 0) {
-    alert("No cards are due for review!\n\nAll caught up! 🎉");
+    alert("No cards are due for review!\n\nAll caught up!");
     return;
   }
+
+  // Get deck name
+  const decks = loadDecks();
+  const deck = getDeck(deckId, decks);
 
   // Initialize session
   studySession = {
     deckId: deckId,
+    deckName: deck ? deck.name : "Study Session",
     cards: dueCards,
     currentIndex: 0,
     isFlipped: false,
@@ -711,6 +845,13 @@ function startStudySession(deckId) {
 
   // Show study view
   showView("study");
+
+  // Show bottom progress bar
+  document.getElementById("bottomProgressBar").classList.remove("hidden");
+
+  // Set deck name
+  document.getElementById("studyDeckName").textContent = studySession.deckName + " Deck";
+
   renderStudyCard();
   updateStudyProgress();
 
@@ -802,8 +943,16 @@ function updateStudyProgress() {
   const total = studySession.stats.total;
   const percentage = (studySession.currentIndex / total) * 100;
 
-  document.getElementById("studyProgress").textContent = `${Math.min(current, total)} of ${total} cards`;
+  // Update progress text
+  document.getElementById("studyProgress").textContent = `Card ${Math.min(current, total)}`;
+  document.getElementById("studyTotal").textContent = `of ${total}`;
+
+  // Update progress bar
   document.getElementById("progressBar").style.width = `${percentage}%`;
+
+  // Update stats counters
+  document.getElementById("correctCount").textContent = studySession.stats.correct;
+  document.getElementById("incorrectCount").textContent = studySession.stats.incorrect;
 }
 
 // End study session
@@ -815,7 +964,7 @@ function endStudySession() {
   const correctPercentage = stats.total > 0 ? Math.round((stats.correct / stats.total) * 100) : 0;
 
   const message = `
-Session Complete! 🎉
+Session Complete!
 
 Cards Reviewed: ${stats.total}
 Correct: ${stats.correct} (${correctPercentage}%)
@@ -829,6 +978,9 @@ Great work!
 
   // Remove keyboard listener
   document.removeEventListener("keydown", handleStudyKeyboard);
+
+  // Hide bottom progress bar
+  document.getElementById("bottomProgressBar").classList.add("hidden");
 
   // Return to deck view
   showView("deckManagement");
@@ -866,6 +1018,7 @@ function handleStudyKeyboard(e) {
       e.preventDefault();
       if (confirm("Exit study session?")) {
         document.removeEventListener("keydown", handleStudyKeyboard);
+        document.getElementById("bottomProgressBar").classList.add("hidden");
         showView("deckManagement");
         renderDeckManagementView(studySession.deckId);
       }
