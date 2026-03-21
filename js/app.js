@@ -548,8 +548,9 @@ function showAddCardModal(deckId) {
 
 // Handle add card
 function handleAddCard(deckId) {
-  const frontInput = document.getElementById("cardFrontInput");
-  const backInput = document.getElementById("cardBackInput");
+  const form = document.getElementById("addCardForm");
+  const frontInput = form ? form.querySelector("#cardFrontInput") : document.getElementById("cardFrontInput");
+  const backInput = form ? form.querySelector("#cardBackInput") : document.getElementById("cardBackInput");
   const frontError = document.getElementById("cardFrontError");
   const backError = document.getElementById("cardBackError");
 
