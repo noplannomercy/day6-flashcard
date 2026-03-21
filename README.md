@@ -197,6 +197,21 @@ Dark themed welcome screen with deck creation prompt.
    - Multi-tab sync
    - Responsive design check
 3. Commit only if all tests pass
+4. See [CHANGELOG.md](CHANGELOG.md) for release history
+
+### QA Status (v0.1.0.0)
+Health score **94/100** — last audited 2026-03-21 via gstack `/qa`
+
+| Category | Score |
+|----------|-------|
+| Console | 100 |
+| Links | 100 |
+| Visual | 100 |
+| Functional | 100 |
+| UX | 90 |
+| Performance | 80 |
+| Content | 100 |
+| Accessibility | 100 |
 
 ### Git Conventions
 - **Branches**: `develop`, `feature/*`, `fix/*`

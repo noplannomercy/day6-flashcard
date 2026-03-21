@@ -69,7 +69,8 @@ day6-flashcard/
 - ✅ Global keyboard shortcuts:
   - N: New deck
   - /: Focus search
-- ✅ Responsive design (320px+, 44px touch targets)
+- ✅ Responsive design (320px+, 44px touch targets — WCAG 2.5.5 compliant)
+- ✅ `overflow-x-hidden` on outer container — prevents header min-w-fit overflow on 375px mobile (fix: 2026-03-21)
 
 ## Commands
 
@@ -279,6 +280,23 @@ if (!confirm("Delete deck? Cards will also be deleted.")) return;
 - Cards tested: 100+ cards (< 100ms search)
 - Animations: 60fps (GPU-accelerated with `will-change`)
 - Debounce: 300ms search, prevents typing lag
+
+## Known Issues & Fix History
+
+### Fixed (v0.1.0.0 — 2026-03-21)
+
+**Add Card modal validation failure (ISSUE-001)**
+- Root cause: `index.html` static `#cardFormView` (line 444) contains `id="cardFrontInput"` and `id="cardBackInput"`. These duplicate IDs are also used by the dynamically-created modal. `document.getElementById()` always returns the FIRST match in DOM order — the hidden static element.
+- Fix: `js/app.js handleAddCard()` now uses `form.querySelector("#cardFrontInput")` scoped to `#addCardForm` instead of `document.getElementById()`.
+- ⚠️ Lingering smell: the duplicate IDs still exist in the DOM. Future improvement: rename static element IDs to `id="static-cardFrontInput"` or remove `#cardFormView` from HTML entirely.
+
+**Mobile 375px horizontal scroll (ISSUE-002)**
+- Root cause: `min-w-fit` on header left/right sections forced the header to 506px, wider than viewport.
+- Fix: `overflow-x-hidden` added to outer `div.flex.flex-col.h-screen` container (index.html:160).
+
+**Touch targets below WCAG 2.5.5 (FINDING-001/002 from design-review)**
+- Settings button was 40×40px. Import button was 42×44px.
+- Fix: Added `min-w-[44px] min-h-[44px]` to both.
 
 ## Browser Compatibility
 
