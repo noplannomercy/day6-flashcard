@@ -1,0 +1,33 @@
+{
+  "date": "2026-03-21",
+  "url": "http://localhost:7736",
+  "healthScore": 94,
+  "categoryScores": {
+    "console": 100,
+    "links": 100,
+    "visual": 100,
+    "functional": 100,
+    "ux": 90,
+    "performance": 80,
+    "content": 100,
+    "accessibility": 100
+  },
+  "issues": [
+    {
+      "id": "ISSUE-001",
+      "title": "Add Card modal always shows validation error due to duplicate element IDs",
+      "severity": "high",
+      "category": "functional",
+      "status": "fixed",
+      "commit": "3533c6e"
+    },
+    {
+      "id": "ISSUE-002",
+      "title": "Mobile 375px horizontal scroll when deck selected",
+      "severity": "medium",
+      "category": "accessibility",
+      "status": "fixed",
+      "commit": "7fe24ad"
+    }
+  ]
+}
